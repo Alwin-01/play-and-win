@@ -1,12 +1,20 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+
+  <!-- IMPORTANT: stops zoom on mobile -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
   <title>Flappy Win</title>
+
   <style>
     body {
       margin: 0;
       overflow: hidden;
       font-family: Arial, sans-serif;
+      touch-action: manipulation;
+      -ms-touch-action: manipulation;
     }
 
     #game {
@@ -78,7 +86,7 @@
       top: 45%;
       width: 100%;
       text-align: center;
-      font-size: 28px;
+      font-size: 26px;
       color: white;
       text-shadow: 2px 2px 4px #000;
     }
@@ -102,15 +110,15 @@
   <div class="cloud" style="top:160px; animation-duration:40s;"></div>
 
   <div id="score">0</div>
-  <div id="ready">Press SPACE to fly</div>
+  <div id="ready">Tap or Press SPACE to Fly</div>
   <div id="bird"></div>
 </div>
 
 <div id="scam">
   <h1>⚠️ YOU GOT SCAMMED!</h1>
-  <p>You trusted the game.</p>
-  <p>Scams work the same way.</p>
-  <p><b>Verify before you trust.</b></p>
+  <p>This game looked real.</p>
+  <p>Scams also look real.</p>
+  <p><b>Stop. Think. Verify.</b></p>
 </div>
 
 <script>
@@ -125,50 +133,47 @@
   let running = false;
   let crashed = false;
 
-  // Start game on first key press
-  document.addEventListener("keydown", () => {
-    if (!running) {
-      document.getElementById("ready").style.display = "none";
-      running = true;
-      createPipe();
-      setInterval(gameLoop, 20);
-    }
-  });
+  let gameLoopInterval;
 
-  // Flap
-  document.addEventListener("keydown", (e) => {
-    if (e.code === "Space" || e.code === "ArrowUp") {
-      velocity = -7;
-    }
-
-    // After fake crash → reveal scam
-    if (crashed) {
-      game.style.display = "none";
-      document.getElementById("scam").style.display = "block";
-    }
-  });
-
-  // Mobile tap support
-document.addEventListener("touchstart", () => {
-  if (!running) {
+  /* START GAME */
+  function startGame() {
+    if (running) return;
     document.getElementById("ready").style.display = "none";
     running = true;
     createPipe();
-    setInterval(gameLoop, 20);
-    return;
+    gameLoopInterval = setInterval(gameLoop, 20);
   }
 
-  if (crashed) {
-    game.style.display = "none";
-    document.getElementById("scam").style.display = "block";
-    return;
+  /* FLAP */
+  function flap() {
+    if (!running) {
+      startGame();
+      return;
+    }
+
+    if (crashed) {
+      game.style.display = "none";
+      document.getElementById("scam").style.display = "block";
+      return;
+    }
+
+    velocity = -7;
   }
 
-  // Flap on tap
-  velocity = -7;
-});
+  /* PC CONTROLS */
+  document.addEventListener("keydown", (e) => {
+    if (e.code === "Space" || e.code === "ArrowUp") {
+      flap();
+    }
+  });
 
+  /* MOBILE CONTROLS */
+  document.addEventListener("touchstart", function (e) {
+    e.preventDefault();
+    flap();
+  }, { passive: false });
 
+  /* GAME LOOP */
   function gameLoop() {
     if (!running || crashed) return;
 
@@ -177,9 +182,11 @@ document.addEventListener("touchstart", () => {
     bird.style.top = birdY + "px";
 
     if (birdY < 0) birdY = 0;
-    if (birdY > window.innerHeight - 40) birdY = window.innerHeight - 40;
+    if (birdY > window.innerHeight - 40)
+      birdY = window.innerHeight - 40;
   }
 
+  /* CREATE PIPE */
   function createPipe() {
     if (crashed) return;
 
@@ -213,16 +220,16 @@ document.addEventListener("touchstart", () => {
       pipeTop.style.left = pipeX + "px";
       pipeBottom.style.left = pipeX + "px";
 
-      // Score when passed
       if (!passed && pipeX < 120) {
         passed = true;
         score++;
         pipesCleared++;
         document.getElementById("score").innerText = score;
 
-        // AFTER FIRST SUCCESS → fake crash
+        /* AFTER FIRST PIPE → FAKE CRASH */
         if (pipesCleared >= 1) {
           crashed = true;
+          clearInterval(gameLoopInterval);
         }
       }
 
@@ -239,4 +246,3 @@ document.addEventListener("touchstart", () => {
 
 </body>
 </html>
-
