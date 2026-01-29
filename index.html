@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Scam Awareness Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f2f2f2;
+      padding-top: 50px;
+    }
+    button {
+      padding: 15px 25px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    #message {
+      font-size: 22px;
+      margin-top: 30px;
+      color: red;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>🎁 Lucky Reward Game 🎁</h1>
+  <p>Click the button to win a surprise gift!</p>
+
+  <button onclick="playGame()">Click to Play</button>
+
+  <div id="message">
+    😱 YOU GOT SCAMMED! <br><br>
+    Never trust random links, calls or free offers.<br>
+    Always verify before acting.
+  </div>
+
+  <script>
+    function playGame() {
+      document.getElementById("message").style.display = "block";
+    }
+  </script>
+
+</body>
+</html>
