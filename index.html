@@ -63,17 +63,20 @@
 
 <div id="scam">
   <h1>⚠️ YOU GOT SCAMMED!</h1>
-  <p>This game looked real, didn’t it?</p>
+  <p>This game looked real.</p>
   <p>Scams also look real.</p>
-  <p>Never trust unknown games, links, rewards or calls.</p>
-  <p><b>Stop. Think. Verify.</b></p>
+  <p><b>Think before you click.</b></p>
 </div>
 
 <script>
   let score = 0;
+  let birdTop = 200;
   let gameRunning = false;
   let frozen = false;
   let scoreInterval;
+  let freezeTime = 8000; // when game freezes
+
+  const bird = document.getElementById("bird");
 
   // Start game after 3 seconds
   setTimeout(() => {
@@ -87,24 +90,41 @@
       }
     }, 1000);
 
-    // Freeze game after some time
+    // Freeze game suddenly
     setTimeout(() => {
       frozen = true;
-    }, 7000);
+    }, freezeTime);
 
   }, 3000);
 
-  // Detect clicks after freeze
-  document.addEventListener("click", () => {
+  // Controls
+  document.addEventListener("keydown", (e) => {
+    if (!gameRunning) return;
+
+    // If frozen & user presses keys → scam reveal
     if (frozen) {
       clearInterval(scoreInterval);
       document.getElementById("game").style.display = "none";
       document.getElementById("scam").style.display = "block";
+      return;
     }
+
+    // Move bird
+    if (e.code === "ArrowUp" || e.code === "Space") {
+      birdTop -= 30;
+    }
+    if (e.code === "ArrowDown") {
+      birdTop += 30;
+    }
+
+    // Limits
+    if (birdTop < 0) birdTop = 0;
+    if (birdTop > window.innerHeight - 40)
+      birdTop = window.innerHeight - 40;
+
+    bird.style.top = birdTop + "px";
   });
 </script>
 
 </body>
 </html>
-
-
