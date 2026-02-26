@@ -208,10 +208,10 @@ function gameLoop() {
       endRound();
     }
 
-    // ✅ Score increase when pipe passed
+    // Score increase when pipe passed
     if (!p.passed && p.x + pipeWidth < birdX) {
       p.passed = true;
-      score++;
+      score += 1;
       document.getElementById("score").innerText = `Score: ${score}`;
     }
   });
@@ -247,6 +247,9 @@ function createPipe() {
 
 /* END ROUND */
 function endRound() {
+  // Reset score when player loses a round
+  score = 0;
+  document.getElementById("score").innerText = "Score: 0";
   if (!running) return;
   running = false;
 
@@ -282,6 +285,7 @@ function retryRound() {
 
 </body>
 </html>
+
 
 
 
