@@ -167,12 +167,18 @@ function startGame() {
 
 /* FLAP */
 function flap() {
-  if (!running) startGame();
+  // If game is over, do nothing
+  if (!running) return;
   velocity = -7;
 }
-
 document.addEventListener("keydown", e => {
-  if (e.code === "Space" || e.code === "ArrowUp") flap();
+  if (e.code === "Space" || e.code === "ArrowUp") {
+    if (!running && score === 0) {
+      startGame();   // only allow first start
+    } else {
+      flap();
+    }
+  }
 });
 
 document.addEventListener("touchstart", e => {
@@ -285,6 +291,7 @@ function retryRound() {
 
 </body>
 </html>
+
 
 
 
