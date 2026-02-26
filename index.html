@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <title>Flappy Win</title>
@@ -47,6 +46,7 @@ body {
   height: 32px;
   background: url('bird-icon.png') no-repeat center;
   background-size: contain;
+  z-index: 3;
 }
 
 /* Pipes */
@@ -54,38 +54,41 @@ body {
   position: absolute;
   width: 70px;
   background: #2ecc71;
+  z-index: 2;
 }
 .top { top: 0; }
 .bottom { bottom: 0; }
 
 /* UI */
-#score, #round {
+#score, #round, #ready, #retry {
   position: absolute;
-  top: 20px;
   width: 100%;
   text-align: center;
-  font-size: 28px;
   color: white;
   text-shadow: 2px 2px 4px #000;
+  z-index: 5; /* 🔥 brings UI to front */
 }
-#round { top: 60px; }
+
+#score {
+  top: 20px;
+  font-size: 28px;
+}
+
+#round {
+  top: 60px;
+  font-size: 22px;
+}
 
 #ready {
-  position: absolute;
   top: 45%;
-  width: 100%;
-  text-align: center;
   font-size: 26px;
-  color: white;
 }
 
 #retry {
   display: none;
-  position: absolute;
   top: 50%;
-  width: 100%;
-  text-align: center;
 }
+
 #retry button {
   font-size: 20px;
   padding: 12px 26px;
@@ -100,6 +103,7 @@ body {
   color: red;
   text-align: center;
   padding-top: 120px;
+  z-index: 10;
 }
 </style>
 </head>
@@ -144,6 +148,10 @@ let pipes = [];
 let gameLoopInterval;
 let pipeInterval;
 
+const birdX = 120;
+const birdWidth = 42;
+const pipeWidth = 70;
+
 /* START GAME */
 function startGame() {
   document.getElementById("ready").style.display = "none";
@@ -177,7 +185,7 @@ function gameLoop() {
   birdY += velocity;
   bird.style.top = birdY + "px";
 
-  // Ground or sky hit
+  // Ground / sky collision
   if (birdY < 0 || birdY > window.innerHeight - 32) {
     endRound();
   }
@@ -187,14 +195,21 @@ function gameLoop() {
     p.top.style.left = p.x + "px";
     p.bottom.style.left = p.x + "px";
 
-    // Collision
+    // Collision with pipe
     if (
-      120 < p.x + 70 &&
-      120 + 42 > p.x &&
+      birdX < p.x + pipeWidth &&
+      birdX + birdWidth > p.x &&
       (birdY < p.topHeight ||
        birdY + 32 > window.innerHeight - p.bottomHeight)
     ) {
       endRound();
+    }
+
+    // ✅ Score increase when pipe passed
+    if (!p.passed && p.x + pipeWidth < birdX) {
+      p.passed = true;
+      score++;
+      document.getElementById("score").innerText = `Score: ${score}`;
     }
   });
 }
@@ -217,7 +232,14 @@ function createPipe() {
   game.appendChild(top);
   game.appendChild(bottom);
 
-  pipes.push({ top, bottom, x: window.innerWidth, topHeight, bottomHeight });
+  pipes.push({
+    top,
+    bottom,
+    x: window.innerWidth,
+    topHeight,
+    bottomHeight,
+    passed: false
+  });
 }
 
 /* END ROUND */
