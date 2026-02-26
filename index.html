@@ -1,105 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Flappy Win</title>
+  <meta charset="UTF-8">
 
-<style>
-body {
-  margin: 0;
-  overflow: hidden;
-  font-family: Arial, sans-serif;
-  touch-action: manipulation;
-}
+  <!-- IMPORTANT: stops zoom on mobile -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-#game {
-  width: 100vw;
-  height: 100vh;
-  background: linear-gradient(#70c5ce, #cceeff);
-  position: relative;
-}
+  <title>Flappy Win</title>
 
-/* Bird */
-#bird {
-  position: absolute;
-  left: 120px;
-  top: 250px;
-  width: 42px;
-  height: 32px;
-  background: gold;
-  border-radius: 50%;
-}
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      touch-action: manipulation;
+      -ms-touch-action: manipulation;
+    }
 
-#bird::after {
-  content: "";
-  position: absolute;
-  right: -10px;
-  top: 12px;
-  border-top: 5px solid transparent;
-  border-bottom: 5px solid transparent;
-  border-left: 10px solid orange;
-}
+    #game {
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(#70c5ce, #cceeff);
+      position: relative;
+    }
 
-/* Pipes */
-.pipe {
-  position: absolute;
-  width: 70px;
-  background: #2ecc71;
-}
+    /* Clouds */
+    .cloud {
+      position: absolute;
+      width: 140px;
+      height: 50px;
+      background: white;
+      border-radius: 50px;
+      opacity: 0.8;
+      animation: cloudMove 30s linear infinite;
+    }
 
-.top { top: 0; }
-.bottom { bottom: 0; }
+    @keyframes cloudMove {
+      from { left: -150px; }
+      to { left: 110vw; }
+    }
 
-/* UI */
-#score, #round {
-  position: absolute;
-  top: 20px;
-  width: 100%;
-  text-align: center;
-  font-size: 28px;
-  color: white;
-  text-shadow: 2px 2px 4px #000;
-}
+    /* Bird */
+    #bird {
+      position: absolute;
+      left: 120px;
+      top: 250px;
+      width: 42px;
+      height: 32px;
+      background: url('bird-icon.png') no-repeat center;
+      background-size: contain;
+    }
 
-#round { top: 60px; }
+    
+    /* Pipes */
+    .pipe {
+      position: absolute;
+      width: 70px;
+      background: #2ecc71;
+    }
 
-#retry {
-  display: none;
-  position: absolute;
-  top: 50%;
-  width: 100%;
-  text-align: center;
-}
+    .top { top: 0; }
+    .bottom { bottom: 0; }
 
-#retry button {
-  padding: 14px 26px;
-  font-size: 20px;
-  cursor: pointer;
-}
+    #score {
+      position: absolute;
+      top: 20px;
+      width: 100%;
+      text-align: center;
+      font-size: 32px;
+      color: white;
+      text-shadow: 2px 2px 4px #000;
+    }
 
-#scam {
-  display: none;
-  width: 100vw;
-  height: 100vh;
-  background: #111;
-  color: red;
-  text-align: center;
-  padding-top: 120px;
-}
-</style>
+    #ready {
+      position: absolute;
+      top: 45%;
+      width: 100%;
+      text-align: center;
+      font-size: 26px;
+      color: white;
+      text-shadow: 2px 2px 4px #000;
+    }
+
+    #scam {
+      display: none;
+      width: 100vw;
+      height: 100vh;
+      background: #111;
+      color: red;
+      text-align: center;
+      padding-top: 120px;
+    }
+  </style>
 </head>
 
 <body>
 
 <div id="game">
-  <div id="score">Score: 0</div>
-  <div id="round">Round: 1 / 3</div>
-  <div id="bird"></div>
+  <div class="cloud" style="top:80px;"></div>
+  <div class="cloud" style="top:160px; animation-duration:40s;"></div>
 
-  <div id="retry">
-    <button onclick="restartRound()">Retry</button>
-  </div>
+  <div id="score">0</div>
+  <div id="ready">Tap or Press SPACE to Fly</div>
+  <div id="bird"></div>
 </div>
 
 <div id="scam">
@@ -107,118 +110,130 @@ body {
   <p>This game looked real.</p>
   <p>Scams also look real.</p>
   <p><b>Stop. Think. Verify.</b></p>
+  <p>Every day, India sees 3,500+ online financial fraud reports — a 200% spike from last year (National Cyber Security Coordinator). At Experian, we prioritize your safety in the digital age. Beware of fraudsters using fake customer care details, also known as ‘Number Spoofing’ on forums, social media, emails, and messages. They mimic real support lines, risking your data and inviting fraud.</p>
 </div>
 
 <script>
-const bird = document.getElementById("bird");
-const game = document.getElementById("game");
+  const bird = document.getElementById("bird");
+  const game = document.getElementById("game");
 
-let birdY, velocity;
-let gravity = 0.6;
-let gameLoop, pipeTimer;
-let pipes = [];
-let score = 0;
-let round = 1;
-let running = false;
+  let birdY = 250;
+  let velocity = 0;
+  let gravity = 0.6;
+  let score = 0;
+  let pipesCleared = 0;
+  let running = false;
+  let crashed = false;
 
-/* START GAME */
-function startGame() {
-  resetState();
-  running = true;
-  gameLoop = setInterval(updateGame, 20);
-  pipeTimer = setInterval(createPipe, 2400);
-}
+  let gameLoopInterval;
 
-/* RESET ROUND */
-function resetState() {
-  birdY = 250;
-  velocity = 0;
-  bird.style.top = birdY + "px";
-  pipes.forEach(p => p.top.remove(), p.bottom.remove());
-  pipes = [];
-  document.getElementById("retry").style.display = "none";
-}
-
-/* FLAP */
-function flap() {
-  if (!running) startGame();
-  velocity = -7;
-}
-
-document.addEventListener("keydown", e => {
-  if (e.code === "Space") flap();
-});
-
-document.addEventListener("touchstart", e => {
-  e.preventDefault();
-  flap();
-}, { passive: false });
-
-/* GAME LOOP */
-function updateGame() {
-  velocity += gravity;
-  birdY += velocity;
-  bird.style.top = birdY + "px";
-
-  if (birdY < 0 || birdY > window.innerHeight - 40) {
-    endRound();
+  /* START GAME */
+  function startGame() {
+    if (running) return;
+    document.getElementById("ready").style.display = "none";
+    running = true;
+    createPipe();
+    gameLoopInterval = setInterval(gameLoop, 20);
   }
 
-  pipes.forEach(p => {
-    p.x -= 3;
-    p.top.style.left = p.x + "px";
-    p.bottom.style.left = p.x + "px";
+  /* FLAP */
+  function flap() {
+    if (!running) {
+      startGame();
+      return;
+    }
 
-    if (
-      120 < p.x + 70 &&
-      120 + 42 > p.x &&
-      (birdY < p.topHeight || birdY + 32 > window.innerHeight - p.bottomHeight)
-    ) {
-      endRound();
+    if (crashed) {
+      game.style.display = "none";
+      document.getElementById("scam").style.display = "block";
+      return;
+    }
+
+    velocity = -7;
+  }
+
+  /* PC CONTROLS */
+  document.addEventListener("keydown", (e) => {
+    if (e.code === "Space" || e.code === "ArrowUp") {
+      flap();
     }
   });
-}
 
-/* CREATE PIPE */
-function createPipe() {
-  const gap = 180;
-  const topHeight = Math.random() * 200 + 60;
-  const bottomHeight = window.innerHeight - topHeight - gap;
+  /* MOBILE CONTROLS */
+  document.addEventListener("touchstart", function (e) {
+    e.preventDefault();
+    flap();
+  }, { passive: false });
 
-  const top = document.createElement("div");
-  top.className = "pipe top";
-  top.style.height = topHeight + "px";
+  /* GAME LOOP */
+  function gameLoop() {
+    if (!running || crashed) return;
 
-  const bottom = document.createElement("div");
-  bottom.className = "pipe bottom";
-  bottom.style.height = bottomHeight + "px";
+    velocity += gravity;
+    birdY += velocity;
+    bird.style.top = birdY + "px";
 
-  game.appendChild(top);
-  game.appendChild(bottom);
-
-  pipes.push({ top, bottom, x: window.innerWidth, topHeight, bottomHeight });
-}
-
-/* END ROUND */
-function endRound() {
-  clearInterval(gameLoop);
-  clearInterval(pipeTimer);
-  running = false;
-
-  if (round < 3) {
-    document.getElementById("retry").style.display = "block";
-  } else {
-    game.style.display = "none";
-    document.getElementById("scam").style.display = "block";
+    if (birdY < 0) birdY = 0;
+    if (birdY > window.innerHeight - 40)
+      birdY = window.innerHeight - 40;
   }
-}
 
-/* RETRY */
-function restartRound() {
-  round++;
-  document.getElementById("round").innerText = `Round: ${round} / 3`;
-  startGame();
-}
+  /* CREATE PIPE */
+  function createPipe() {
+    if (crashed) return;
+
+    const gap = 180;
+    const topHeight = Math.random() * 200 + 60;
+    const bottomHeight = window.innerHeight - topHeight - gap;
+
+    const pipeTop = document.createElement("div");
+    pipeTop.className = "pipe top";
+    pipeTop.style.height = topHeight + "px";
+    pipeTop.style.left = "100vw";
+
+    const pipeBottom = document.createElement("div");
+    pipeBottom.className = "pipe bottom";
+    pipeBottom.style.height = bottomHeight + "px";
+    pipeBottom.style.left = "100vw";
+
+    game.appendChild(pipeTop);
+    game.appendChild(pipeBottom);
+
+    let pipeX = window.innerWidth;
+    let passed = false;
+
+    const movePipe = setInterval(() => {
+      if (crashed) {
+        clearInterval(movePipe);
+        return;
+      }
+
+      pipeX -= 3;
+      pipeTop.style.left = pipeX + "px";
+      pipeBottom.style.left = pipeX + "px";
+
+      if (!passed && pipeX < 120) {
+        passed = true;
+        score++;
+        pipesCleared++;
+        document.getElementById("score").innerText = score;
+
+        /* AFTER FIRST PIPE → FAKE CRASH */
+        if (pipesCleared >= 1) {
+          crashed = true;
+          clearInterval(gameLoopInterval);
+        }
+      }
+
+      if (pipeX < -80) {
+        pipeTop.remove();
+        pipeBottom.remove();
+        clearInterval(movePipe);
+      }
+    }, 20);
+
+    setTimeout(createPipe, 2600);
+  }
 </script>
 
 </body>
