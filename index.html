@@ -173,8 +173,8 @@ function flap() {
 }
 document.addEventListener("keydown", e => {
   if (e.code === "Space" || e.code === "ArrowUp") {
-    if (!running && score === 0) {
-      startGame();   // only allow first start
+    if (!running && document.getElementById("retry").style.display === "none") {
+      startGame();
     } else {
       flap();
     }
@@ -183,7 +183,12 @@ document.addEventListener("keydown", e => {
 
 document.addEventListener("touchstart", e => {
   e.preventDefault();
-  flap();
+
+  if (!running && document.getElementById("retry").style.display === "none") {
+    startGame();   // ✅ first tap starts game
+  } else {
+    flap();        // ✅ taps during game flap
+  }
 }, { passive: false });
 
 /* GAME LOOP */
@@ -291,6 +296,7 @@ function retryRound() {
 
 </body>
 </html>
+
 
 
 
